@@ -111,198 +111,29 @@ EcoFinder is engineered using **Clean Architecture** principles and a **modular 
 ## 📊 Project Artifacts & Diagrams
 
 ### 1. Component & System Architecture Diagram
-The component diagram outlines the client-server interaction between the React frontend, Node.js API services, and the MySQL persistence layer.
+The component diagram illustrates the layered client-server architecture between the React front-end (web & mobile), the Node.js API core services, and the MySQL relational database layer.
 
 <p align="center">
   <img src="./assets/component_diagram.jpg" alt="Component Architecture Diagram" width="85%"/>
 </p>
 
-```mermaid
-flowchart TD
-    subgraph Users ["Actors / Users"]
-        U1["👤 EcoFinder Requester (User)<br/>Creates pickup requests & manages profile"]
-        U2["🦺 EcoFinder Collector (User)<br/>Views available requests & accepts pickups"]
-    end
-
-    subgraph Frontend ["Front-End Layer (React Web & Mobile SPA)"]
-        FE["EcoFinder Front-End<br/>• Request Management UI<br/>• Interactive Leaflet/Map Engine<br/>• Accessible WCAG Interface<br/>• Real-time Status Views"]
-    end
-
-    subgraph Backend ["Back-End Layer (Node.js REST API)"]
-        API["Core Services & APIs<br/>• Authentication & Authorization<br/>• Request & Dispatch Controller<br/>• Concurrency Lock & Reservation Engine<br/>• Environmental Impact Calculator<br/>• Notification Dispatcher"]
-    end
-
-    subgraph Persistence ["Persistence Layer (MySQL 8.0)"]
-        DB[("Database (MySQL)<br/>• Users & Addresses<br/>• Requests & Reserved Lots<br/>• Environmental Metrics<br/>• History & Audit Logs")]
-    end
-
-    U1 -->|Accesses UI via Web/Mobile| FE
-    U2 -->|Accesses UI via Web/Mobile| FE
-    FE -->|HTTP/REST APIs (JSON)| API
-    API -->|ACID Queries & Transactions| DB
-```
-
 ---
 
 ### 2. Use Case Diagram
-The use case diagram highlights the system interactions for both the **Requester (*Solicitante*)** and the **Collector (*Coletor*)**, demonstrating specialized permissions and functionality inheritance.
+The use case diagram highlights the functional scope and interaction models for both user profiles: **Requester (*Solicitante*)** and **Collector (*Coletor*)**, including inclusion (`<<include>>`), extension (`<<extend>>`), and specialized role inheritance.
 
 <p align="center">
   <img src="./assets/use_case_diagram.jpg" alt="Use Case Diagram" width="85%"/>
 </p>
 
-```mermaid
-flowchart LR
-    subgraph Actors
-        S["👤 Solicitante<br/>(Requester)"]
-        C["🦺 Coletor<br/>(Collector)"]
-    end
-
-    subgraph EcoFinder_System ["EcoFinder System Boundary"]
-        UC1(["Cadastrar-se"])
-        UC2(["Cadastrar Endereço"])
-        UC3(["Logar no Sistema"])
-        UC4(["Criar Chamado"])
-        UC5(["Visualizar seus Chamados"])
-        UC6(["Editar Chamado"])
-        UC7(["Cancelar Chamado"])
-        UC8(["Excluir Conta"])
-        UC9(["Visualizar Mensagens"])
-        UC10(["Editar Endereço"])
-        UC11(["Visualizar Chamados Disponíveis"])
-        UC12(["Reservar Chamado"])
-        UC13(["Visualizar Reservas"])
-        UC14(["Alterar Previsão de Coleta"])
-        UC15(["Cancelar Reserva"])
-    end
-
-    C -.->|Specializes / Inherits base access| S
-
-    S --- UC1
-    UC1 -.->|«include»| UC2
-    UC1 -.->|«extend»| UC3
-    S --- UC4
-    S --- UC5
-    UC5 -.->|«extend»| UC6
-    UC5 -.->|«extend»| UC7
-    S --- UC8
-    S --- UC9
-    S --- UC10
-
-    C --- UC11
-    UC11 -.->|«extend»| UC12
-    C --- UC13
-    UC13 -.->|«extend»| UC14
-    UC13 -.->|«extend»| UC15
-```
-
 ---
 
 ### 3. Entity-Relationship Diagram (ERD / DER)
-The relational model enforces high data integrity, audit history, and multi-category material tracking.
+The relational database model enforces transactional integrity (ACID), geolocated coordinates, audit trails, and multi-category recyclable material tracking.
 
 <p align="center">
   <img src="./assets/erd_diagram.png" alt="Entity Relationship Diagram" width="100%"/>
 </p>
-
-```mermaid
-erDiagram
-    tb_pessoa ||--o| tb_usuariocomum : "is a"
-    tb_pessoa ||--o| tb_coletor : "is a"
-    tb_pessoa ||--o{ tb_endereco : "has"
-    tb_pessoa ||--o{ tb_log_edit_perfil : "audits"
-    tb_endereco ||--o{ tb_log_edit_user_endereco : "audits"
-
-    tb_usuariocomum ||--o{ tb_chamado : "creates"
-    tb_usuariocomum ||--o{ tb_notifica_solicitante : "receives"
-
-    tb_chamado ||--|{ tb_chamado_material : "contains"
-    tb_chamado ||--o| tb_disponibilidade : "tracks status"
-    tb_chamado ||--o{ tb_chamados_reservados : "is reserved in"
-    tb_chamado ||--o{ tb_log_alt_chamado : "logs edits"
-
-    tb_material ||--o{ tb_chamado_material : "categorizes"
-    tb_material ||--|| tb_impacto_ambiental : "defines metrics"
-
-    tb_coletor ||--o{ tb_chamados_reservados : "reserves"
-    tb_coletor ||--o{ tb_notifica_coletor : "receives"
-
-    tb_chamados_reservados ||--o{ tb_hist_chamados_reservados : "logs transitions"
-
-    tb_pessoa {
-        int id_pessoa PK
-        varchar nome
-        varchar email
-        varchar senha
-        varchar genero
-        enum situacao_conta
-    }
-
-    tb_usuariocomum {
-        int id_usuarioComum PK,FK
-        int usuariocomum_strikes
-    }
-
-    tb_coletor {
-        int id_coletor PK,FK
-        int quantidade_coletas
-        int coletor_strikes
-        int nivel
-    }
-
-    tb_endereco {
-        int id_endereco PK
-        int id_pessoa_endereco FK
-        varchar cep
-        varchar estado
-        varchar cidade
-        varchar bairro
-        varchar rua
-        varchar numerocasa
-        decimal latitude
-        decimal longitude
-    }
-
-    tb_chamado {
-        int id_chamado PK
-        int id_usuarioComum FK
-        datetime data_chamado
-        datetime data_expiracao
-    }
-
-    tb_material {
-        int id_material PK
-        varchar tipo
-    }
-
-    tb_chamado_material {
-        int id_chamado_material PK
-        int id_chamado FK
-        int id_material FK
-        int qtde_unitaria
-        decimal kilograma
-        enum tamanho_material
-    }
-
-    tb_impacto_ambiental {
-        int id_material PK,FK
-        decimal litros_petroleo_por_kg
-        decimal kw_economia_energia
-        decimal co2_kg_evitar
-    }
-
-    tb_chamados_reservados {
-        int id_chamado_reservado PK
-        int id_chamado FK
-        int id_coletor FK
-        datetime data_reserva
-        datetime data_expiracao_reserva
-        enum previsao_coleta
-        enum status_reserva
-        tinyint confirmacao_coletor
-        tinyint confirmacao_solicitante
-    }
-```
 
 ---
 
@@ -358,23 +189,17 @@ EcoFinder combines **Scrum** and **Kanban** (Scrumban hybrid approach) to ensure
 
 ---
 
-## 📅 Project Roadmap (2026)
+## 📅 Project Roadmap & Schedule (2026)
 
-```mermaid
-gantt
-    title EcoFinder Project Execution Timeline (2026)
-    dateFormat  YYYY-MM
-    section Requirements & Design
-    Bibliographic Review & Requirements     :done,    des1, 2026-02, 2026-03
-    UX/UI Prototyping & Database Modeling  :active,  des2, 2026-03, 2026-05
-    section Development
-    Clean Architecture Implementation       :         dev1, 2026-04, 2026-08
-    Automated CI/CD & Testing Pipeline      :         dev2, 2026-06, 2026-09
-    section Validation & Delivery
-    Field Validation (Satélite Íris I)      :         val1, 2026-08, 2026-10
-    Data Analysis & Results Compilation     :         val2, 2026-09, 2026-12
-    Final Defense & Dissemination           :         val3, 2026-11, 2026-12
-```
+| Stage / Activity | Period | Status / Deliverables |
+| :--- | :---: | :--- |
+| **1. Bibliographic Review & Requirements** | Feb – Mar / 2026 | Literature review, semi-structured interviews with collectors and community. |
+| **2. UX/UI Design & Database Modeling** | Mar – May / 2026 | Lo-Fi (Canva), Hi-Fi (Stitch AI), and MySQL Workbench ERD normalization. |
+| **3. Clean Modular Implementation** | Apr – Aug / 2026 | Full-stack development (React + Node.js), REST APIs, and authentication. |
+| **4. Automated Tests & CI/CD Pipeline** | Jun – Sep / 2026 | Unit/integration testing suites and GitHub Actions automated pipelines. |
+| **5. Field Validation & Usability Testing** | Aug – Oct / 2026 | Real-world pilot validation at Bairro Satélite Íris I (Campinas - SP). |
+| **6. Data Analysis & Thesis Writing** | Sep – Dec / 2026 | Statistical analysis of logistics efficiency and final monograph redaction. |
+| **7. Final Defense & Dissemination** | Nov – Dec / 2026 | Academic defense at IFSP Câmpus Campinas and open dissemination. |
 
 ---
 
